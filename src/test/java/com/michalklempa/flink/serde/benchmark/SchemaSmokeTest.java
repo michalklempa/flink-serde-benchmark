@@ -1,26 +1,18 @@
 package com.michalklempa.flink.serde.benchmark;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.michalklempa.flink.serde.benchmark.pojo.Order;
 import java.util.List;
-import org.apache.flink.api.common.typeinfo.TypeInformation;
-import org.apache.flink.api.java.typeutils.GenericTypeInfo;
-import org.apache.flink.api.java.typeutils.ListTypeInfo;
-import org.apache.flink.api.java.typeutils.MapTypeInfo;
-import org.apache.flink.api.java.typeutils.PojoField;
-import org.apache.flink.api.java.typeutils.PojoTypeInfo;
+import org.apache.flink.types.PojoTestUtils;
 import org.junit.jupiter.api.Test;
 
 class SchemaSmokeTest {
 
     @Test
     void pojoIsRecognizedWithoutGenericTypes() {
-        TypeInformation<Order> info = TypeInformation.of(Order.class);
-        assertTrue(info instanceof PojoTypeInfo);
-        assertFalse(containsGeneric(info), info.toString());
+        PojoTestUtils.assertSerializedAsPojo(Order.class);
+        PojoTestUtils.assertSerializedAsPojoWithoutKryo(Order.class);
     }
 
     @Test
@@ -63,28 +55,5 @@ class SchemaSmokeTest {
                 .putAttributes("k", "v")
                 .build();
         assertEquals(1, order.getTagsCount());
-    }
-
-    private static boolean containsGeneric(TypeInformation<?> info) {
-        if (info instanceof GenericTypeInfo) {
-            return true;
-        }
-        if (info instanceof ListTypeInfo) {
-            return containsGeneric(((ListTypeInfo<?>) info).getElementTypeInfo());
-        }
-        if (info instanceof MapTypeInfo) {
-            MapTypeInfo<?, ?> m = (MapTypeInfo<?, ?>) info;
-            return containsGeneric(m.getKeyTypeInfo()) || containsGeneric(m.getValueTypeInfo());
-        }
-        if (info instanceof PojoTypeInfo) {
-            PojoTypeInfo<?> p = (PojoTypeInfo<?>) info;
-            for (int i = 0; i < p.getArity(); i++) {
-                PojoField f = p.getPojoFieldAt(i);
-                if (containsGeneric(f.getTypeInformation())) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 }

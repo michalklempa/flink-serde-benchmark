@@ -54,17 +54,19 @@ Common feature subset: int, long, double, boolean, string, bytes, enum, nested r
 - [x] hinted collection type info on the POJO (`@TypeInfo` factories for `List`/`Map`)
 - [x] `pojoplain` package: same POJO classes without annotations (pojo-plain and pojo-kryo variants)
 - [x] `KryoVariantsSmokeTest`: plain POJO has Kryo collection fields and fails under `disableGenericTypes()`; full Kryo round trips through `KryoSerializer`
-- [ ] Switch `SchemaSmokeTest` to `PojoTestUtils#assertSerializedAsPojoWithoutKryo()` (needs `flink-test-utils`)
-- [ ] Check which `pipeline.*` serialization options exist in the 1.18 docs
+- [x] `SchemaSmokeTest` uses `PojoTestUtils#assertSerializedAsPojoWithoutKryo()` (`flink-test-utils`); `KryoVariantsSmokeTest` asserts the plain POJO is rejected by it
+- pipeline.* serialization options: out of scope
 
 ## 3. Neutral data generator
 
-- [ ] Seeded generator producing a model-independent record description
-- [ ] Mappers to pojo-hinted, pojo-plain (also used for pojo-kryo), Avro, protobuf
-- [ ] Profile small (~100 B)
-- [ ] Profile medium (~2 KB)
-- [ ] Profile large (~50 KB)
-- [ ] Unit test: all three representations hold the same logical content
+Code in `data/`: `Profile`, `OrderSpec`, `OrderGenerator`, `Mappers`. Test: `OrderGeneratorTest`.
+
+- [x] Seeded generator producing a model-independent record description
+- [x] Mappers to pojo-hinted, pojo-plain (also used for pojo-kryo), Avro, protobuf
+- [x] Profile small (~180 B protobuf)
+- [x] Profile medium (~1.8 KB protobuf)
+- [x] Profile large (~42 KB protobuf)
+- [x] Unit test: all four representations hold the same logical content
 
 ## 4. Serializer factories
 

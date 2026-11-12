@@ -16,6 +16,7 @@ import org.apache.flink.api.java.typeutils.runtime.kryo.KryoSerializer;
 import org.apache.flink.api.java.typeutils.runtime.PojoSerializer;
 import org.apache.flink.core.memory.DataInputDeserializer;
 import org.apache.flink.core.memory.DataOutputSerializer;
+import org.apache.flink.types.PojoTestUtils;
 import org.junit.jupiter.api.Test;
 
 class KryoVariantsSmokeTest {
@@ -32,6 +33,12 @@ class KryoVariantsSmokeTest {
             assertEquals(false, info.getPojoFieldAt(idx).getTypeInformation() instanceof GenericTypeInfo, name);
         }
         assertInstanceOf(PojoSerializer.class, info.createSerializer(new ExecutionConfig()));
+    }
+
+    @Test
+    void plainPojoIsRejectedByWithoutKryoAssertion() {
+        PojoTestUtils.assertSerializedAsPojo(Order.class);
+        assertThrows(AssertionError.class, () -> PojoTestUtils.assertSerializedAsPojoWithoutKryo(Order.class));
     }
 
     @Test
