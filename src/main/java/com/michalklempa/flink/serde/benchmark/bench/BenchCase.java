@@ -9,12 +9,12 @@ import org.apache.flink.core.memory.DataInputDeserializer;
 import org.apache.flink.core.memory.DataOutputSerializer;
 
 public final class BenchCase<T> {
-    public static final int POOL = 64;
-
     private final SerializerVariant<T> variant;
     private final TypeSerializer<T> serializer;
-    private final Object[] objects = new Object[POOL];
-    private final byte[][] bytes = new byte[POOL][];
+    private final int pool;
+    private final Object[] objects;
+    private final byte[][] bytes;
+    private T reuse;
     private final DataOutputSerializer out = new DataOutputSerializer(1 << 16);
     private final DataInputDeserializer in = new DataInputDeserializer();
     private int cursor;
@@ -22,9 +22,12 @@ public final class BenchCase<T> {
     public BenchCase(SerializerVariant<T> variant, Profile profile, long seed) {
         this.variant = variant;
         this.serializer = variant.createSerializer(!variant.usesKryo());
+        this.pool = poolSize(profile);
+        this.objects = new Object[pool];
+        this.bytes = new byte[pool][];
         OrderGenerator generator = new OrderGenerator(seed, profile);
         try {
-            for (int i = 0; i < POOL; i++) {
+            for (int i = 0; i < pool; i++) {
                 T value = variant.map(generator.next());
                 objects[i] = value;
                 DataOutputSerializer tmp = new DataOutputSerializer(1024);
@@ -34,6 +37,21 @@ public final class BenchCase<T> {
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
+    }
+
+    public static int poolSize(Profile profile) {
+        switch (profile) {
+            case SMALL:
+                return 4096;
+            case MEDIUM:
+                return 1024;
+            default:
+                return 256;
+        }
+    }
+
+    public int pool() {
+        return pool;
     }
 
     public SerializerVariant<T> variant() {
@@ -49,11 +67,11 @@ public final class BenchCase<T> {
         for (byte[] b : bytes) {
             total += b.length;
         }
-        return (double) total / POOL;
+        return (double) total / pool;
     }
 
     private int next() {
-        return cursor++ & (POOL - 1);
+        return cursor++ & (pool - 1);
     }
 
     @SuppressWarnings("unchecked")
@@ -66,6 +84,12 @@ public final class BenchCase<T> {
     public T deserialize() throws IOException {
         in.setBuffer(bytes[next()]);
         return serializer.deserialize(in);
+    }
+
+    public T deserializeReuse() throws IOException {
+        in.setBuffer(bytes[next()]);
+        reuse = reuse == null ? serializer.deserialize(in) : serializer.deserialize(reuse, in);
+        return reuse;
     }
 
     @SuppressWarnings("unchecked")

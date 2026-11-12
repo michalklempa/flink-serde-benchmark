@@ -49,7 +49,7 @@ public final class ReportBuilder {
         StringBuilder sb = new StringBuilder();
         sb.append(runDescription).append("\n\n");
         String[][] metrics = {
-                {"serialize", "serialize"}, {"deserialize", "deserialize"},
+                {"serialize", "serialize"}, {"deserialize", "deserialize (new object each time)"}, {"deserializeReuse", "deserialize (reusing one object)"},
                 {"roundTrip", "round trip (serialize + deserialize)"}, {"copy", "copy"}};
         for (String[] m : metrics) {
             if (profiles(ms, m[0]).isEmpty()) {

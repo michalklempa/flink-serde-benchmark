@@ -38,9 +38,10 @@ class BenchmarkSmokeTest {
 
     private static <T> void runOperations(SerializerVariant<T> variant) throws IOException {
         BenchCase<T> c = new BenchCase<>(variant, Profile.SMALL, 1L);
-        for (int i = 0; i < BenchCase.POOL + 3; i++) {
+        for (int i = 0; i < c.pool() + 3; i++) {
             assertTrue(c.serialize() > 0);
             assertNotNull(c.deserialize());
+            assertNotNull(c.deserializeReuse());
             assertNotNull(c.roundTrip());
             assertNotNull(c.copy());
         }

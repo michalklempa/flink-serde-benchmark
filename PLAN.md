@@ -81,7 +81,7 @@ Code in `serde/`: `SerializerVariant`, `Variants`. Test: `SerializerVariantsTest
 
 ## 5. JMH microbenchmarks
 
-Code in `bench/`: `BenchCase` (pre-generated pool of 64 orders and pre-serialized bytes per variant/profile), `SerdeBenchmark` (serialize, deserialize, roundTrip, copy; params variant x profile), `SnapshotBenchmark` (snapshot write, read, compatibility check; param variant), `SizeReport` (serialized and snapshot bytes table). Test: `BenchmarkSmokeTest` (runs every operation, the size report, and an embedded JMH run).
+Code in `bench/`: `BenchCase` (pre-generated pool of orders (4096 small, 1024 medium, 256 large) and pre-serialized bytes per variant/profile), `SerdeBenchmark` (serialize, deserialize, deserializeReuse, roundTrip, copy; params variant x profile), `SnapshotBenchmark` (snapshot write, read, compatibility check; param variant), `SizeReport` (serialized and snapshot bytes table). Test: `BenchmarkSmokeTest` (runs every operation, the size report, and an embedded JMH run).
 
 - [x] serialize into `DataOutputSerializer`
 - [x] deserialize from `DataInputDeserializer`
@@ -90,6 +90,14 @@ Code in `bench/`: `BenchCase` (pre-generated pool of 64 orders and pre-serialize
 - [x] serialized size per profile
 - [x] `-prof gc` allocation rate
 - [x] snapshot size (in `SizeReport`) and snapshot write/read/compatibility check cost (`SnapshotBenchmark`)
+
+## Fairness and housekeeping
+
+- [x] Larger object pool sized by profile (4096 / 1024 / 256) instead of 64
+- [x] `deserializeReuse` benchmark (`deserialize(reuse, source)`) next to the fresh-object `deserialize`
+- [x] README "Methodology and caveats": specific Avro records, untuned Kryo, proto3 defaults, in-memory only
+- [ ] Optional sparse-data profile (many default or empty fields), only if the first results look interesting
+- [ ] Conclusion paragraph in README after the first real run
 
 ## 6. State-level end-to-end job
 
@@ -107,5 +115,5 @@ Generated in Java (no Python): `bench/ReportMain` runs JMH programmatically and 
 - [x] Programmatic JMH run with GC profiler (`ReportMain quick|full`)
 - [x] Markdown tables (ns/op, B/op, serialized bytes, snapshot) and ASCII bar charts, written into README between markers
 - [x] Document run modes and durations in `README.md`
-- [ ] Do the first real `quick` run and review the numbers
+- [x] Do the first real `quick` run and review the numbers (2026-11-12, results in README)
 - [ ] Do a `full` run, record JVM flags and CPU pinning in `README.md`

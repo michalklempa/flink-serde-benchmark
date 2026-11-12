@@ -48,6 +48,11 @@ public class SerdeBenchmark {
     }
 
     @Benchmark
+    public Object deserializeReuse() throws IOException {
+        return benchCase.deserializeReuse();
+    }
+
+    @Benchmark
     public Object roundTrip() throws IOException {
         return benchCase.roundTrip();
     }
