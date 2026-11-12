@@ -70,12 +70,14 @@ Code in `data/`: `Profile`, `OrderSpec`, `OrderGenerator`, `Mappers`. Test: `Ord
 
 ## 4. Serializer factories
 
-- [ ] pojo-hinted: `TypeInformation.of(pojo.Order.class)` gives `PojoSerializer`
-- [ ] pojo-plain: `TypeInformation.of(pojoplain.Order.class)` gives `PojoSerializer` with Kryo collection fields
-- [ ] pojo-kryo: `new GenericTypeInfo<>(pojoplain.Order.class)` gives `KryoSerializer`
-- [ ] Avro: `AvroTypeInfo` for `SpecificRecord` gives `AvroSerializer`
-- [ ] Protobuf: `ProtoTypeInfo.proto(...)` gives `ProtoSerializer`
-- [ ] Unit test: each factory yields the expected serializer class; only the two Kryo variants may involve Kryo
+Code in `serde/`: `SerializerVariant`, `Variants`. Test: `SerializerVariantsTest` (serializer class, generic-types-disabled behaviour, round trip and copy for every variant and profile).
+
+- [x] pojo-hinted: `TypeInformation.of(pojo.Order.class)` gives `PojoSerializer`
+- [x] pojo-plain: `TypeInformation.of(pojoplain.Order.class)` gives `PojoSerializer` with Kryo collection fields
+- [x] pojo-kryo: `new GenericTypeInfo<>(pojoplain.Order.class)` gives `KryoSerializer`
+- [x] Avro: `AvroTypeInfo` for `SpecificRecord` gives `AvroSerializer`
+- [x] Protobuf: `ProtoTypeInfo.proto(...)` gives `ProtoSerializer`
+- [x] Unit test: each factory yields the expected serializer class; only the two Kryo variants may involve Kryo
 
 ## 5. JMH microbenchmarks
 
