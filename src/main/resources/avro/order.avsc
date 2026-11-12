@@ -1,0 +1,46 @@
+{
+  "type": "record",
+  "name": "Order",
+  "namespace": "com.michalklempa.flink.serde.benchmark.avro",
+  "fields": [
+    {"name": "orderId", "type": "string"},
+    {"name": "createdAtMillis", "type": "long"},
+    {"name": "updatedAtMillis", "type": "long"},
+    {"name": "status", "type": {"type": "enum", "name": "OrderStatus", "symbols": ["NEW", "PAID", "SHIPPED", "DELIVERED", "CANCELLED"]}},
+    {"name": "customer", "type": {
+      "type": "record",
+      "name": "Customer",
+      "fields": [
+        {"name": "customerId", "type": "long"},
+        {"name": "name", "type": "string"},
+        {"name": "email", "type": "string"},
+        {"name": "vip", "type": "boolean"},
+        {"name": "address", "type": {
+          "type": "record",
+          "name": "Address",
+          "fields": [
+            {"name": "street", "type": "string"},
+            {"name": "city", "type": "string"},
+            {"name": "country", "type": "string"},
+            {"name": "postalCode", "type": "string"}
+          ]
+        }}
+      ]
+    }},
+    {"name": "items", "type": {"type": "array", "items": {
+      "type": "record",
+      "name": "LineItem",
+      "fields": [
+        {"name": "sku", "type": "string"},
+        {"name": "name", "type": "string"},
+        {"name": "quantity", "type": "int"},
+        {"name": "unitPrice", "type": "double"},
+        {"name": "discount", "type": "double"}
+      ]
+    }}},
+    {"name": "tags", "type": {"type": "array", "items": "string"}},
+    {"name": "attributes", "type": {"type": "map", "values": "string"}},
+    {"name": "totalAmount", "type": "double"},
+    {"name": "payload", "type": "bytes"}
+  ]
+}
