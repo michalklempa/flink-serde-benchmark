@@ -81,13 +81,15 @@ Code in `serde/`: `SerializerVariant`, `Variants`. Test: `SerializerVariantsTest
 
 ## 5. JMH microbenchmarks
 
-- [ ] serialize into `DataOutputSerializer`
-- [ ] deserialize from `DataInputDeserializer`
-- [ ] round trip
-- [ ] `copy`
-- [ ] serialized size per profile
-- [ ] `-prof gc` allocation rate
-- [ ] snapshot size and compatibility check cost
+Code in `bench/`: `BenchCase` (pre-generated pool of 64 orders and pre-serialized bytes per variant/profile), `SerdeBenchmark` (serialize, deserialize, roundTrip, copy; params variant x profile), `SnapshotBenchmark` (snapshot write, read, compatibility check; param variant), `SizeReport` (serialized and snapshot bytes table). Test: `BenchmarkSmokeTest` (runs every operation, the size report, and an embedded JMH run).
+
+- [x] serialize into `DataOutputSerializer`
+- [x] deserialize from `DataInputDeserializer`
+- [x] round trip
+- [x] `copy`
+- [x] serialized size per profile
+- [x] `-prof gc` allocation rate
+- [x] snapshot size (in `SizeReport`) and snapshot write/read/compatibility check cost (`SnapshotBenchmark`)
 
 ## 6. State-level end-to-end job
 
@@ -100,6 +102,10 @@ Code in `serde/`: `SerializerVariant`, `Variants`. Test: `SerializerVariantsTest
 
 ## 7. Results
 
-- [ ] JMH JSON output
-- [ ] Script producing comparison table (ops/s, bytes, B/op)
-- [ ] Document JVM flags, CPU pinning, how to reproduce in `README.md`
+Generated in Java (no Python): `bench/ReportMain` runs JMH programmatically and `bench/ReportBuilder` renders markdown tables and ASCII bar charts into the marked block of `README.md`. Test: `BenchmarkSmokeTest#reportMainRewritesReadmeBlock` (smoke mode).
+
+- [x] Programmatic JMH run with GC profiler (`ReportMain quick|full`)
+- [x] Markdown tables (ns/op, B/op, serialized bytes, snapshot) and ASCII bar charts, written into README between markers
+- [x] Document run modes and durations in `README.md`
+- [ ] Do the first real `quick` run and review the numbers
+- [ ] Do a `full` run, record JVM flags and CPU pinning in `README.md`

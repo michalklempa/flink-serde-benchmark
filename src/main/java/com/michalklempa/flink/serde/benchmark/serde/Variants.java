@@ -49,4 +49,13 @@ public final class Variants {
     public static List<SerializerVariant<?>> all() {
         return Arrays.asList(pojoHinted(), pojoPlain(), pojoKryo(), avro(), protobuf());
     }
+
+    public static SerializerVariant<?> byName(String name) {
+        for (SerializerVariant<?> v : all()) {
+            if (v.name().equals(name)) {
+                return v;
+            }
+        }
+        throw new IllegalArgumentException("unknown variant " + name);
+    }
 }
