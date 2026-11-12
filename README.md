@@ -50,10 +50,12 @@ java -cp target/benchmarks.jar com.michalklempa.flink.serde.benchmark.job.JobBen
 
 | Mode | Records N (small / medium / large) | Keys K | Repeats | Runs | Estimated time |
 |---|---|---|---|---|---|
-| `quick` | 200,000 / 50,000 / 5,000 | 100,000 / 10,000 / 1,000 | 1 | 30 | about 5 min |
-| `full` | 2,000,000 / 500,000 / 50,000 | 100,000 / 10,000 / 1,000 | 3 | 90 | about 45 to 60 min |
+| `quick` | 300,000 / 75,000 / 4,500 | 100,000 / 10,000 / 1,000 | 1 | 30 | about 5 min |
+| `full` | 2,400,000 / 600,000 / 35,000 | 100,000 / 10,000 / 1,000 | 3 | 90 | about 60 min |
 
-The estimates assume about 5 s of JVM and cluster startup per run plus the record processing time; they are guesses, not timed runs. The heap backend is not used here because it does not serialize on state access. A single run: `java -cp target/benchmarks.jar com.michalklempa.flink.serde.benchmark.job.JobRunner --job=B --variant=protobuf --profile=MEDIUM --records=50000 --keys=10000`.
+Sizing: a run costs about 5.5 s of JVM and mini cluster startup plus `N / throughput`. Measured throughput on the dev machine (records/s, fastest and slowest variant): Job A small 239k / 103k, medium 44k / 21k, large 2.3k / 1.2k; Job B small 74k / 31k, medium 19k / 8k, large 970 / 608. N is chosen so each profile takes about the same share of time, which gives about 20 minutes per repeat of the full matrix (about 5 minutes for `quick`). The totals are estimates from these rates, not a timed run; the Kryo variants take about twice as long as the others.
+
+A single run: `java -cp target/benchmarks.jar com.michalklempa.flink.serde.benchmark.job.JobRunner --job=B --variant=protobuf --profile=MEDIUM --records=50000 --keys=10000`.
 
 ## Methodology and caveats
 

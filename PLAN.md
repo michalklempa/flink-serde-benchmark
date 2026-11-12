@@ -114,7 +114,7 @@ Decisions are in "6.0 Decisions" below.
 - [x] JVM isolation: one JVM per run, started by the driver with `ProcessBuilder`
 - [x] Backends: throughput on RocksDB only; heap and RocksDB both in the later size / restore phase (6.6)
 - [x] Checkpoint size / restore phase (6.6): later, after 6.1-6.5
-- [x] Parameters (`full`): N = 2,000,000 small / 500,000 medium / 50,000 large, W = 10 percent of N, K = 100,000 small / 10,000 medium / 1,000 large, 3 repeats, median. `quick`: N / 10, 1 repeat. `smoke`: tiny, for tests.
+- [x] Parameters (`full`): N = 2,400,000 small / 600,000 medium / 35,000 large (sized for about 60 min), W = 10 percent of N, K = 100,000 small / 10,000 medium / 1,000 large, 3 repeats, median. `quick`: N = 300,000 / 75,000 / 4,500, 1 repeat (about 5 min). `smoke`: tiny, for tests.
 
 ### 6.1 Dependencies and scaffold
 

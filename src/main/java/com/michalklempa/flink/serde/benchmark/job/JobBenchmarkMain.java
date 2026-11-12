@@ -26,11 +26,16 @@ public final class JobBenchmarkMain {
     }
 
     static long records(String mode, Profile p) {
-        if (mode.equals("smoke")) {
-            return 3000;
+        switch (mode) {
+            case "smoke":
+                return 3000;
+            case "quick":
+                return p == Profile.SMALL ? 300_000 : p == Profile.MEDIUM ? 75_000 : 4_500;
+            case "full":
+                return p == Profile.SMALL ? 2_400_000 : p == Profile.MEDIUM ? 600_000 : 35_000;
+            default:
+                throw new IllegalArgumentException("mode must be quick, full or smoke");
         }
-        long full = p == Profile.SMALL ? 2_000_000 : p == Profile.MEDIUM ? 500_000 : 50_000;
-        return mode.equals("full") ? full : full / 10;
     }
 
     static long keys(String mode, Profile p) {
