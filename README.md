@@ -273,6 +273,85 @@ pojo-kryo    ██████████████████████�
 ## Flink job results
 
 <!-- jobs:start -->
+Mode `quick`: parallelism 1, chaining off, one JVM per run, 1 repeat(s), median. Java 11.0.29, Linux, 8 CPUs, run on 2026-11-12.
+
+#### Job A: operator to operator (records/s, higher is better)
+
+| variant | SMALL | MEDIUM | LARGE |
+|---|---:|---:|---:|
+| protobuf | 287,127 | 46,606 | 2,181 |
+| avro | 228,917 | 39,344 | 2,438 |
+| pojo-hinted | 203,050 | 38,949 | 2,928 |
+| pojo-plain | 113,161 | 18,883 | 1,324 |
+| pojo-kryo | 88,889 | 21,141 | 1,312 |
+
+```
+job A SMALL (records/s)
+protobuf     ██████████████████████████████      287,127
+avro         ████████████████████████░░░░░░      228,917
+pojo-hinted  █████████████████████░░░░░░░░░      203,050
+pojo-plain   ████████████░░░░░░░░░░░░░░░░░░      113,161
+pojo-kryo    █████████░░░░░░░░░░░░░░░░░░░░░       88,889
+
+job A MEDIUM (records/s)
+protobuf     ██████████████████████████████       46,606
+avro         █████████████████████████░░░░░       39,344
+pojo-hinted  █████████████████████████░░░░░       38,949
+pojo-plain   ████████████░░░░░░░░░░░░░░░░░░       18,883
+pojo-kryo    ██████████████░░░░░░░░░░░░░░░░       21,141
+
+job A LARGE (records/s)
+protobuf     ██████████████████████░░░░░░░░        2,181
+avro         █████████████████████████░░░░░        2,438
+pojo-hinted  ██████████████████████████████        2,928
+pojo-plain   ██████████████░░░░░░░░░░░░░░░░        1,324
+pojo-kryo    █████████████░░░░░░░░░░░░░░░░░        1,312
+```
+
+#### Job B: keyed ValueState on RocksDB (records/s, higher is better)
+
+| variant | SMALL | MEDIUM | LARGE |
+|---|---:|---:|---:|
+| protobuf | 80,446 | 23,619 | 1,076 |
+| pojo-hinted | 71,127 | 22,716 | 1,037 |
+| avro | 59,955 | 18,516 | 1,027 |
+| pojo-plain | 35,516 | 10,412 | 677 |
+| pojo-kryo | 33,070 | 10,052 | 674 |
+
+```
+job B SMALL (records/s)
+protobuf     ██████████████████████████████       80,446
+pojo-hinted  ███████████████████████████░░░       71,127
+avro         ██████████████████████░░░░░░░░       59,955
+pojo-plain   █████████████░░░░░░░░░░░░░░░░░       35,516
+pojo-kryo    ████████████░░░░░░░░░░░░░░░░░░       33,070
+
+job B MEDIUM (records/s)
+protobuf     ██████████████████████████████       23,619
+pojo-hinted  █████████████████████████████░       22,716
+avro         ████████████████████████░░░░░░       18,516
+pojo-plain   █████████████░░░░░░░░░░░░░░░░░       10,412
+pojo-kryo    █████████████░░░░░░░░░░░░░░░░░       10,052
+
+job B LARGE (records/s)
+protobuf     ██████████████████████████████        1,076
+pojo-hinted  █████████████████████████████░        1,037
+avro         █████████████████████████████░        1,027
+pojo-plain   ███████████████████░░░░░░░░░░░          677
+pojo-kryo    ███████████████████░░░░░░░░░░░          674
+```
+
+#### State cost per record (µs, Job B minus Job A, lower is better)
+
+| variant | SMALL | MEDIUM | LARGE |
+|---|---:|---:|---:|
+| protobuf | 8.9 | 20.9 | 470 |
+| pojo-hinted | 9.1 | 18.3 | 623 |
+| avro | 12.3 | 28.6 | 564 |
+| pojo-plain | 19.3 | 43.1 | 723 |
+| pojo-kryo | 19.0 | 52.2 | 722 |
+
+
 <!-- jobs:end -->
 
 ## Notes for Claude
