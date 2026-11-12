@@ -37,12 +37,16 @@ public final class ReportBuilder {
     }
 
     public static String replaceBlock(String readme, String block) {
-        int s = readme.indexOf(START);
-        int e = readme.indexOf(END);
+        return replaceBlock(readme, block, START, END);
+    }
+
+    public static String replaceBlock(String readme, String block, String start, String end) {
+        int s = readme.indexOf(start);
+        int e = readme.indexOf(end);
         if (s < 0 || e < s) {
-            throw new IllegalStateException("README is missing " + START + " / " + END + " markers");
+            throw new IllegalStateException("README is missing " + start + " / " + end + " markers");
         }
-        return readme.substring(0, s + START.length()) + "\n" + block + "\n" + readme.substring(e);
+        return readme.substring(0, s + start.length()) + "\n" + block + "\n" + readme.substring(e);
     }
 
     public static String build(List<Measurement> ms, List<SizeReport.Row> sizes, String runDescription) {

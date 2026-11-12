@@ -99,14 +99,63 @@ Code in `bench/`: `BenchCase` (pre-generated pool of orders (4096 small, 1024 me
 - [ ] Optional sparse-data profile (many default or empty fields), only if the first results look interesting
 - [ ] Conclusion paragraph in README after the first real run
 
-## 6. State-level end-to-end job
+## 6. Flink jobs (mini cluster, parallelism 1)
 
-- [ ] Bounded generator source
-- [ ] `ValueState` per type
-- [ ] `MapState` per type
-- [ ] RocksDB backend
-- [ ] Heap backend
-- [ ] Measure throughput, checkpoint/savepoint size, restore time
+Two jobs, each run per variant (pojo-hinted, pojo-plain, pojo-kryo, avro, protobuf) and profile. Code in `job/`, started from a `main` method that builds a local environment (mini cluster in the JVM). Parallelism 1, max parallelism 128, operator chaining disabled so every hop goes through the serializer, checkpointing off during throughput runs, `disableGenericTypes()` on for the three non-Kryo variants.
+
+- Job A, operator-to-operator: `source -> pass-through map -> sink`. Measures the network-path (record) serde only.
+- Job B, keyed state: `source(Tuple2<key, order>) -> keyBy -> KeyedProcessFunction (read-modify-write ValueState<order>) -> sink`. Measures record serde plus state serde. Job B minus Job A is the state cost.
+
+Decisions are in "6.0 Decisions" below.
+
+### 6.0 Decisions
+
+- [x] Throughput measurement: sink timestamps at record W and N (accumulator), throughput = (N-W)/elapsed
+- [x] JVM isolation: one JVM per run, started by the driver with `ProcessBuilder`
+- [x] Backends: throughput on RocksDB only; heap and RocksDB both in the later size / restore phase (6.6)
+- [x] Checkpoint size / restore phase (6.6): later, after 6.1-6.5
+- [x] Parameters (`full`): N = 2,000,000 small / 500,000 medium / 50,000 large, W = 10 percent of N, K = 100,000 small / 10,000 medium / 1,000 large, 3 repeats, median. `quick`: N / 10, 1 repeat. `smoke`: tiny, for tests.
+
+### 6.1 Dependencies and scaffold
+
+Implemented in `job/`: `JobConfig`, `JobResult`, `PoolGenerator`, `KeyedPoolGenerator`, `TimingSink`, `KeyedStateFunction`, `JobRunner` (main for one run), `JobBenchmarkMain` (driver) and `JobReportBuilder`. Tests: `JobSmokeTest` (both jobs for all 5 variants, config parsing, driver in smoke mode).
+
+- [x] Add `flink-streaming-java`, `flink-clients`, `flink-runtime`, `flink-connector-datagen`, `flink-statebackend-rocksdb` (1.18.1) to `pom.xml`
+- [x] Check the shaded `benchmarks.jar` still starts JMH and the job main (service files, log4j)
+- [x] `job/JobConfig`: variant, profile, N, W, K, backend, job kind; parsed from `main` arguments
+
+### 6.2 Shared building blocks
+
+- [x] Source: `DataGeneratorSource` with a `GeneratorFunction` cycling the pre-built pool from `BenchCase`, bounded to N records, no rate limit, explicit `TypeInformation` from the variant
+- [x] For Job B the source emits `Tuple2<Long, T>` with `Types.TUPLE(Types.LONG, variantTypeInfo)` and key = index modulo K
+- [x] `TimingSink`: counts records, writes `System.nanoTime()` into an accumulator at record W and at record N
+- [x] Result object: records, elapsed nanos between W and N, throughput records/s and MB/s (serialized bytes), printed as one JSON line
+
+### 6.3 Job A (operator to operator)
+
+- [x] Pass-through operator (identity map) with chaining disabled between source, map and sink
+- [x] Unit test per variant: small run through the mini cluster, sink saw every record (`JobSmokeTest`)
+
+### 6.4 Job B (keyed state)
+
+- [x] `KeyedProcessFunction` with `ValueState<T>` created from the variant `TypeInformation` (not a class), read-modify-write per record
+- [x] RocksDB backend with a local working directory
+- (heap backend is only used in 6.6)
+- [x] Unit test per variant: small run through the mini cluster, sink saw every record (state content is not asserted; the serializer round trips are covered by `SerializerVariantsTest`)
+
+### 6.5 Driver and reporting
+
+- [x] `JobBenchmarkMain` driver: for each (job, variant, profile, backend, repeat) start a JVM with `ProcessBuilder`, read the JSON line, take the median over repeats
+- [x] Render markdown tables (records/s per variant and profile, Job A, Job B, and Job B minus Job A as cost per record) and ASCII bars between a second pair of README markers (`jobs:start` / `jobs:end`)
+- [x] Smoke mode for tests (tiny N, one variant)
+- [x] Document run modes and durations in `README.md`
+
+### 6.6 State size and restore (later, after 6.1-6.5)
+
+- [ ] Unbounded Job B until K keys are loaded, `JobClient.stopWithSavepoint`
+- [ ] Savepoint directory size in bytes per variant and backend
+- [ ] Restart from the savepoint, time to first processed record
+- [ ] Report table
 
 ## 7. Results
 
@@ -117,3 +166,4 @@ Generated in Java (no Python): `bench/ReportMain` runs JMH programmatically and 
 - [x] Document run modes and durations in `README.md`
 - [x] Do the first real `quick` run and review the numbers (2026-11-12, results in README)
 - [ ] Do a `full` run, record JVM flags and CPU pinning in `README.md`
+- [ ] Do the first real `quick` run of `JobBenchmarkMain` and review
