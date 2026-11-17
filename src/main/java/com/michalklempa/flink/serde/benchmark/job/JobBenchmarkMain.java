@@ -83,6 +83,8 @@ public final class JobBenchmarkMain {
     private static JobResult runForked(JobConfig config) throws IOException, InterruptedException {
         List<String> cmd = new ArrayList<>();
         cmd.add(Paths.get(System.getProperty("java.home"), "bin", "java").toString());
+        cmd.add("-Xms2g");
+        cmd.add("-Xmx2g");
         cmd.add("-cp");
         cmd.add(System.getProperty("java.class.path"));
         cmd.add(JobRunner.class.getName());

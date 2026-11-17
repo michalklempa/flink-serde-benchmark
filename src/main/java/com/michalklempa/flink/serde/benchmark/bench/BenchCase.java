@@ -92,12 +92,11 @@ public final class BenchCase<T> {
         return reuse;
     }
 
-    @SuppressWarnings("unchecked")
-    public T roundTrip() throws IOException {
+    public int roundTrip() throws IOException {
+        in.setBuffer(bytes[next()]);
         out.clear();
-        serializer.serialize((T) objects[next()], out);
-        in.setBuffer(out.getSharedBuffer(), 0, out.length());
-        return serializer.deserialize(in);
+        serializer.serialize(serializer.deserialize(in), out);
+        return out.length();
     }
 
     @SuppressWarnings("unchecked")

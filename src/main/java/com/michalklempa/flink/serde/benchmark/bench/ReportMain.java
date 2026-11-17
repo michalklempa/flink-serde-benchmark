@@ -38,7 +38,7 @@ public final class ReportMain {
         String description;
         switch (mode) {
             case "full":
-                description = "Mode `full`: 2 forks, 5 x 1 s warmup, 5 x 1 s measurement.";
+                description = "Mode `full`: 5 forks, 5 x 1 s warmup, 5 x 1 s measurement.";
                 break;
             case "quick":
                 b.forks(1).warmupIterations(1).warmupTime(TimeValue.seconds(1))

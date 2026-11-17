@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Random;
 
 public final class OrderGenerator {
-    private static final String ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789";
+    private static final String ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789áčéíšžý";
     private static final int STATUS_COUNT = 5;
 
     private final Random random;
@@ -26,7 +26,7 @@ public final class OrderGenerator {
         long created = 1_700_000_000_000L + sequence * 1000 + random.nextInt(1000);
         String orderId = "ord-" + (sequence++) + "-" + text(8);
         CustomerSpec customer = new CustomerSpec(
-                1 + random.nextInt(1_000_000),
+                random.nextLong() >>> (1 + random.nextInt(60)),
                 text(profile.stringLength),
                 text(profile.stringLength) + "@example.com",
                 random.nextBoolean(),
@@ -37,7 +37,7 @@ public final class OrderGenerator {
         for (int i = 0; i < profile.items; i++) {
             int quantity = 1 + random.nextInt(10);
             double unitPrice = money();
-            double discount = random.nextInt(4) * 5.0;
+            double discount = random.nextInt(2001) / 100.0;
             total += quantity * unitPrice * (1 - discount / 100);
             items.add(new LineItemSpec("sku-" + text(profile.stringLength), text(profile.stringLength), quantity,
                     unitPrice, discount));
@@ -62,7 +62,7 @@ public final class OrderGenerator {
 
     private String text(int length) {
         StringBuilder sb = new StringBuilder(length);
-        for (int i = 0; i < length; i++) {
+        for (int i = (length + 1) / 2 + random.nextInt(length + 1); i > 0; i--) {
             sb.append(ALPHABET.charAt(random.nextInt(ALPHABET.length())));
         }
         return sb.toString();

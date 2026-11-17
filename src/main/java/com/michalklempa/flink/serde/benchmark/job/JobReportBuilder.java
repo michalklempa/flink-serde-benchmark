@@ -39,8 +39,6 @@ public final class JobReportBuilder {
         sb.append("#### Job B: keyed ValueState on RocksDB (records/s, higher is better)\n\n");
         sb.append(table(rows, JobConfig.Kind.B));
         sb.append(bars(rows, JobConfig.Kind.B));
-        sb.append("#### State cost per record (µs, Job B minus Job A, lower is better)\n\n");
-        sb.append(costTable(rows));
         return sb.toString();
     }
 
@@ -109,29 +107,6 @@ public final class JobReportBuilder {
             sb.append('\n');
         }
         return sb.toString().replaceAll("\n+$", "\n") + "```\n\n";
-    }
-
-    private static String costTable(List<Row> rows) {
-        List<Profile> ps = profiles(rows, JobConfig.Kind.B);
-        StringBuilder sb = new StringBuilder("| variant |");
-        StringBuilder sep = new StringBuilder("|---|");
-        for (Profile p : ps) {
-            sb.append(' ').append(p).append(" |");
-            sep.append("---:|");
-        }
-        sb.append('\n').append(sep).append('\n');
-        for (String v : variants(rows, JobConfig.Kind.B)) {
-            sb.append("| ").append(v).append(" |");
-            for (Profile p : ps) {
-                Optional<Row> a = find(rows, JobConfig.Kind.A, v, p);
-                Optional<Row> b = find(rows, JobConfig.Kind.B, v, p);
-                String cell = a.isPresent() && b.isPresent()
-                        ? number(1e6 / b.get().recordsPerSecond - 1e6 / a.get().recordsPerSecond) : "-";
-                sb.append(' ').append(cell).append(" |");
-            }
-            sb.append('\n');
-        }
-        return sb.append('\n').toString();
     }
 
     static String number(double v) {

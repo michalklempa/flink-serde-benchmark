@@ -104,7 +104,7 @@ Code in `bench/`: `BenchCase` (pre-generated pool of orders (4096 small, 1024 me
 Two jobs, each run per variant (pojo-hinted, pojo-plain, pojo-kryo, avro, protobuf) and profile. Code in `job/`, started from a `main` method that builds a local environment (mini cluster in the JVM). Parallelism 1, max parallelism 128, operator chaining disabled so every hop goes through the serializer, checkpointing off during throughput runs, `disableGenericTypes()` on for the three non-Kryo variants.
 
 - Job A, operator-to-operator: `source -> pass-through map -> sink`. Measures the network-path (record) serde only.
-- Job B, keyed state: `source(Tuple2<key, order>) -> keyBy -> KeyedProcessFunction (read-modify-write ValueState<order>) -> sink`. Measures record serde plus state serde. Job B minus Job A is the state cost.
+- Job B, keyed state: `source(Tuple2<key, order>) -> keyBy -> KeyedProcessFunction (read-modify-write ValueState<order>) -> sink`. Measures record serde plus state serde.
 
 Decisions are in "6.0 Decisions" below.
 
@@ -127,7 +127,7 @@ Implemented in `job/`: `JobConfig`, `JobResult`, `PoolGenerator`, `KeyedPoolGene
 ### 6.2 Shared building blocks
 
 - [x] Source: `DataGeneratorSource` with a `GeneratorFunction` cycling the pre-built pool from `BenchCase`, bounded to N records, no rate limit, explicit `TypeInformation` from the variant
-- [x] For Job B the source emits `Tuple2<Long, T>` with `Types.TUPLE(Types.LONG, variantTypeInfo)` and key = index modulo K
+- [x] For Job B the source emits `Tuple2<Long, T>` with `Types.TUPLE(Types.LONG, variantTypeInfo)` and a skewed key in [0, K)
 - [x] `TimingSink`: counts records, writes `System.nanoTime()` into an accumulator at record W and at record N
 - [x] Result object: records, elapsed nanos between W and N, throughput records/s and MB/s (serialized bytes), printed as one JSON line
 
@@ -146,7 +146,7 @@ Implemented in `job/`: `JobConfig`, `JobResult`, `PoolGenerator`, `KeyedPoolGene
 ### 6.5 Driver and reporting
 
 - [x] `JobBenchmarkMain` driver: for each (job, variant, profile, backend, repeat) start a JVM with `ProcessBuilder`, read the JSON line, take the median over repeats
-- [x] Render markdown tables (records/s per variant and profile, Job A, Job B, and Job B minus Job A as cost per record) and ASCII bars between a second pair of README markers (`jobs:start` / `jobs:end`)
+- [x] Render markdown tables (records/s per variant and profile, Job A and Job B) and ASCII bars between a second pair of README markers (`jobs:start` / `jobs:end`)
 - [x] Smoke mode for tests (tiny N, one variant)
 - [x] Document run modes and durations in `README.md`
 

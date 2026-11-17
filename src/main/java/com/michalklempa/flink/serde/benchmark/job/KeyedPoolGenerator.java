@@ -7,6 +7,7 @@ import org.apache.flink.connector.datagen.source.GeneratorFunction;
 public class KeyedPoolGenerator<T> implements GeneratorFunction<Long, Tuple2<Long, T>> {
     private final PoolGenerator<T> pool;
     private final long keys;
+    private final java.util.Random random = new java.util.Random(12345L);
 
     public KeyedPoolGenerator(String variantName, Profile profile, long keys) {
         this.pool = new PoolGenerator<>(variantName, profile);
@@ -20,6 +21,6 @@ public class KeyedPoolGenerator<T> implements GeneratorFunction<Long, Tuple2<Lon
 
     @Override
     public Tuple2<Long, T> map(Long index) {
-        return Tuple2.of(index % keys, pool.map(index));
+        return Tuple2.of((long) (keys * Math.pow(random.nextDouble(), 3)), pool.map(index));
     }
 }

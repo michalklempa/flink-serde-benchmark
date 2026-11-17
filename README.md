@@ -27,7 +27,7 @@ java -cp target/benchmarks.jar com.michalklempa.flink.serde.benchmark.bench.Repo
 | Mode | Settings | Per benchmark | Total |
 |---|---|---|---|
 | `quick` | 1 fork, 1 x 1 s warmup, 2 x 1 s measurement | ~4 s | ~5.5 min |
-| `full` | 2 forks, 5 x 1 s warmup, 5 x 1 s measurement | ~22 s | ~30 min |
+| `full` | 5 forks, 5 x 1 s warmup, 5 x 1 s measurement | ~55 s | ~75 min |
 
 The `quick` run is for a first comparison and sanity check; one fork and two 1 s iterations give noisy scores, so use `full` for numbers you publish. The durations are estimates from the formula, not timed runs.
 
@@ -39,7 +39,7 @@ Raw JMH CLI is still available for ad-hoc runs, for example:
 Two jobs run on a mini cluster in a single JVM with parallelism 1, max parallelism 128 and operator chaining off, so every hop goes through the serializer:
 
 - Job A: `source -> pass-through map -> sink` (record serde between operators).
-- Job B: `source -> keyBy -> KeyedProcessFunction with ValueState<Order> (read, then update) -> sink`, on the RocksDB state backend. Job B minus Job A is the state cost per record.
+- Job B: `source -> keyBy -> KeyedProcessFunction with ValueState<Order> (read, then update) -> sink`, on the RocksDB state backend. Keys are skewed (`K * u^3` for uniform `u`), so low keys are hot. Job B also adds `keyBy` and a `Tuple2` wrapper, so the two jobs are not subtracted from each other.
 
 Throughput is measured in the sink: it stores `System.nanoTime()` at record W (10 percent of N) and at record N into accumulators, and throughput is `(N - W) / elapsed`, which excludes job startup and warmup. Every run is a separate JVM started by the driver; the median over the repeats is reported.
 
@@ -64,7 +64,13 @@ A single run: `java -cp target/benchmarks.jar com.michalklempa.flink.serde.bench
 - `deserialize` creates a new object every call; `deserializeReuse` calls `deserialize(reuse, source)` with one object, as Flink does when object reuse is enabled. Protobuf messages and Kryo ignore the reuse object, so for them both numbers match.
 - Avro uses generated specific records: classes generated from `order.avsc` by `avro-maven-plugin` (`SpecificRecord`, strings as `java.lang.String`), wrapped by `AvroTypeInfo` and serialized by Flink's `AvroSerializer`. Generic records and reflect-based POJOs are not benchmarked. The serializer snapshot carries the full Avro schema, which is why Avro's snapshot is larger than protobuf's.
 - `pojo-plain` and `pojo-kryo` use Flink's default Kryo with no class registration, which is what an unaware developer gets; a tuned Kryo setup would be faster and smaller. All other variants run with `disableGenericTypes()`.
-- Protobuf is proto3, which does not write default values. The generated data rarely contains zeros or empty strings, so this has little effect on sizes here.
+- Protobuf is proto3, which does not write default values. `vip` (false half of the time) and `status` (`NEW` a fifth of the time) are therefore sometimes omitted; every other field is practically never zero or empty.
+- Generated data: strings vary in length around the profile's value and are about 16 percent non-ASCII; `customerId` is spread over all magnitudes so neither varint (Avro, protobuf) nor fixed-width (POJO) encoding is favoured; payload bytes are random and incompressible. The three profiles change all dimensions at once, so a difference between profiles cannot be attributed to one of them.
+- `roundTrip` deserializes and then serializes the fresh object, as an operator hop does. `serialize` alone re-serializes pooled objects; protobuf messages cache their serialized size, so that number flatters protobuf.
+- `ProtoSerializer` comes from the author's own `flink-protobuf` library. It serializes through `toByteArray()` (one extra copy) and its `copy` returns the immutable message as is, so the protobuf `copy` score is not a deep copy.
+- Each JMH fork runs one variant, so serializer call sites are monomorphic and fully inlined. A real job mixes serializer types; absolute numbers here are optimistic for every variant.
+- JMH forks and job JVMs run with a fixed 2 GB heap; JMH forks use ParallelGC.
+- Not covered: schema evolution, nullable or optional fields, checkpoint and restore, tuned Kryo, `Row`/`RowData`, state larger than memory. One machine, one JDK, Flink 1.18.1.
 
 ## Results
 
@@ -340,17 +346,6 @@ avro         ██████████████████████�
 pojo-plain   ████████████████░░░░░░░░░░░░░░          623
 pojo-kryo    ████████████████░░░░░░░░░░░░░░          621
 ```
-
-#### State cost per record (µs, Job B minus Job A, lower is better)
-
-| variant | SMALL | MEDIUM | LARGE |
-|---|---:|---:|---:|
-| protobuf | 9.0 | 23.1 | 585 |
-| pojo-hinted | 11.8 | 25.6 | 612 |
-| avro | 12.5 | 32.6 | 658 |
-| pojo-plain | 22.1 | 52.6 | 886 |
-| pojo-kryo | 74.1 | 53.8 | 903 |
-
 
 <!-- jobs:end -->
 

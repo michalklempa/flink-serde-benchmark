@@ -26,7 +26,7 @@ import org.openjdk.jmh.annotations.Warmup;
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
 @Warmup(iterations = 5, time = 1)
 @Measurement(iterations = 5, time = 1)
-@Fork(2)
+@Fork(value = 5, jvmArgs = {"-Xms2g", "-Xmx2g", "-XX:+UseParallelGC"})
 public class SnapshotBenchmark {
 
     @Param({"pojo-hinted", "pojo-plain", "pojo-kryo", "avro", "protobuf"})

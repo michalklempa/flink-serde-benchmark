@@ -1,7 +1,7 @@
 package com.michalklempa.flink.serde.benchmark.data;
 
 public enum Profile {
-    SMALL(1, 1, 1, 0, 6),
+    SMALL(1, 1, 1, 16, 6),
     MEDIUM(18, 8, 12, 256, 12),
     LARGE(500, 40, 100, 8192, 16);
 

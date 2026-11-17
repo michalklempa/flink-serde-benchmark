@@ -21,7 +21,7 @@ import org.openjdk.jmh.annotations.Warmup;
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 @Warmup(iterations = 5, time = 1)
 @Measurement(iterations = 5, time = 1)
-@Fork(2)
+@Fork(value = 5, jvmArgs = {"-Xms2g", "-Xmx2g", "-XX:+UseParallelGC"})
 public class SerdeBenchmark {
 
     @Param({"pojo-hinted", "pojo-plain", "pojo-kryo", "avro", "protobuf"})
@@ -53,7 +53,7 @@ public class SerdeBenchmark {
     }
 
     @Benchmark
-    public Object roundTrip() throws IOException {
+    public int roundTrip() throws IOException {
         return benchCase.roundTrip();
     }
 
